@@ -1,0 +1,128 @@
+﻿@model List<TangoWEB.Models.Pedido>
+@{
+    ViewData["Title"] = "Dashboard de Ventas";
+
+    string fechaDesde = Context.Request.Query["fechaDesde"];
+    string fechaHasta = Context.Request.Query["fechaHasta"];
+    string clienteID = Context.Request.Query["clienteID"];
+    string productoID = Context.Request.Query["productoID"];
+}
+
+<div class="container mt-4">
+
+    <h2 class="text-center mb-3">📊 Dashboard de Ventas</h2>
+
+    <div class="card p-3 shadow mb-4">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Fecha Desde</label>
+                <input type="date" name="fechaDesde" class="form-control" value="@fechaDesde" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Fecha Hasta</label>
+                <input type="date" name="fechaHasta" class="form-control" value="@fechaHasta" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Cliente</label>
+                <select name="clienteID" class="form-select">
+                    <option value="">Todos</option>
+                    @foreach (var c in (IEnumerable<TangoWEB.Models.Cliente>)ViewBag.Clientes)
+                    {
+                        <option value="@c.ClienteID" selected="@(clienteID == c.ClienteID.ToString() ? "selected" : null)">
+                            @c.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Producto</label>
+                <select name="productoID" class="form-select">
+                    <option value="">Todos</option>
+                    @foreach (var p in (IEnumerable<TangoWEB.Models.Producto>)ViewBag.Productos)
+                    {
+                        <option value="@p.ProductoID" selected="@(productoID == p.ProductoID.ToString() ? "selected" : null)">
+                            @p.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 text-end mt-2">
+                <button class="btn btn-primary">Filtrar</button>
+                <a href="/Home/Index" class="btn btn-outline-secondary btn-sm px-3">Volver</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <canvas id="ventasProductoChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="ventasClienteChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card p-3 shadow">
+        <h4>Detalle de Pedidos</h4>
+        <table class="table table-bordered table-striped text-center">
+            <thead class="table-primary">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Producto</th>
+                    <th>Cant.</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    foreach (var i in p.Items)
+                    {
+                        <tr>
+                            <td>@p.Fecha.ToShortDateString()</td>
+                            <td>@p.Cliente?.Nombre</td>
+                            <td>@i.Producto?.Nombre</td>
+                            <td>@i.Cantidad</td>
+                            <td>@i.PrecioUnitario.ToString("0.00")</td>
+                            <td>@i.Subtotal.ToString("0.00")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ventasProducto = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.VentasPorProducto ?? new List<object>()));
+    const ventasCliente = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.VentasPorCliente ?? new List<object>()));
+
+    const colores = ['#36A2EB','#FF6384','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#8BC34A','#E91E63'];
+
+    new Chart(document.getElementById('ventasProductoChart'), {
+        type: 'bar',
+        data: {
+            labels: ventasProducto.map(v => v.Producto),
+            datasets: [{
+                data: ventasProducto.map(v => v.Total),
+                backgroundColor: ventasProducto.map((_, i) => colores[i % colores.length])
+            }]
+        },
+        options: { responsive: true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+
+    new Chart(document.getElementById('ventasClienteChart'), {
+        type: 'pie',
+        data: {
+            labels: ventasCliente.map(v => v.Cliente),
+            datasets: [{
+                data: ventasCliente.map(v => v.Total),
+                backgroundColor: ventasCliente.map((_, i) => colores[i % colores.length])
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>

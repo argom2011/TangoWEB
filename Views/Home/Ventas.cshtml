@@ -1,0 +1,155 @@
+﻿@{
+    ViewData["Title"] = "Ventas";
+}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-3">🧾 Nueva Venta</h2>
+
+    <div class="card p-3 shadow">
+
+        <!-- Combo Clientes -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Cliente</label>
+            <select id="clienteSelect" class="form-select"></select>
+        </div>
+
+        <!-- Combo Productos y Cantidad -->
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label class="form-label fw-bold">Producto</label>
+                <select id="productoSelect" class="form-select"></select>
+            </div>
+            <div class="col-3">
+                <label class="form-label fw-bold">Cantidad</label>
+                <input id="cantidad" type="number" class="form-control" value="1" min="1" />
+            </div>
+            <div class="col-3 d-flex align-items-end">
+                <button type="button" class="btn btn-success w-100 btn-sm" onclick="agregarItem()">➕ Agregar</button>
+            </div>
+        </div>
+
+        <!-- Tabla detalle -->
+        <table class="table table-bordered text-center table-sm">
+            <thead class="table-primary">
+                <tr>
+                    <th>Producto</th>
+                    <th>Cant.</th>
+                    <th>Precio</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="detalleBody"></tbody>
+        </table>
+
+        <h5 class="text-end">Total: $<span id="total">0.00</span></h5>
+
+        <div class="d-flex justify-content-between mt-3">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.location.href='/'">⬅ Volver</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="confirmarVenta()">💾 Confirmar Venta</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let items = [];
+    let productosData = [];
+
+    document.addEventListener("DOMContentLoaded", cargarCombos);
+
+    function cargarCombos() {
+
+        fetch("/api/pedidos/clientescombo")
+            .then(r => r.json())
+            .then(data => {
+                let sel = document.getElementById("clienteSelect");
+                sel.innerHTML = "";
+                data.forEach(c => {
+                    sel.innerHTML += `<option value="${c.clienteID}">${c.display}</option>`;
+                });
+            });
+
+        fetch("/api/pedidos/productoscombo")
+            .then(r => r.json())
+            .then(data => {
+                productosData = data;
+                let sel = document.getElementById("productoSelect");
+                sel.innerHTML = "";
+                data.forEach(p => {
+                    sel.innerHTML += `<option value="${p.productoID}">${p.display}</option>`;
+                });
+            });
+    }
+
+    function agregarItem() {
+        let productoID = document.getElementById("productoSelect").value;
+        let cantidad = parseInt(document.getElementById("cantidad").value);
+
+        let prod = productosData.find(p => p.productoID == productoID);
+        if (!prod) return;
+
+        let precio = prod.precio;
+        let nombre = prod.display.split(" - $")[0];
+
+        items.push({
+            productoID: parseInt(productoID),
+            cantidad: cantidad,
+            precioUnitario: precio
+        });
+
+        renderDetalle();
+    }
+
+    function renderDetalle() {
+        let tbody = document.getElementById("detalleBody");
+        tbody.innerHTML = "";
+        let total = 0;
+
+        items.forEach((i, idx) => {
+            let sub = i.cantidad * i.precioUnitario;
+            total += sub;
+
+            tbody.innerHTML += `
+            <tr>
+                <td>${i.productoID}</td>
+                <td>${i.cantidad}</td>
+                <td>${i.precioUnitario.toFixed(2)}</td>
+                <td>${sub.toFixed(2)}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="eliminarItem(${idx})">❌</button></td>
+            </tr>`;
+        });
+
+        document.getElementById("total").innerText = total.toFixed(2);
+    }
+
+    function eliminarItem(i){
+        items.splice(i,1);
+        renderDetalle();
+    }
+
+    function confirmarVenta() {
+
+        if(items.length === 0){
+            alert("Debe agregar productos");
+            return;
+        }
+
+        let pedido = {
+            clienteID: parseInt(document.getElementById("clienteSelect").value),
+            total: parseFloat(document.getElementById("total").innerText),
+            items: items
+        };
+
+        fetch("/api/pedidos/confirmar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(pedido)
+        })
+        .then(r => r.text())
+        .then(msg => {
+            alert(msg);
+            items = [];
+            renderDetalle();
+        });
+    }
+</script>

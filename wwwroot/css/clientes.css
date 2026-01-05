@@ -1,0 +1,16 @@
+﻿.card {
+    border-radius: 10px;
+}
+
+.table-hover tbody tr:hover {
+    background: #e9f7ff !important;
+}
+
+h2 {
+    font-weight: 700;
+    color: #2a2a2a;
+}
+
+form input {
+    border-radius: 6px;
+}

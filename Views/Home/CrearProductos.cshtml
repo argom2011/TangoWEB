@@ -1,0 +1,75 @@
+﻿@model TangoWEB.Models.Producto
+
+@{
+    bool esEdicion = Model != null && Model.ProductoID > 0;
+    ViewData["Title"] = esEdicion ? "Editar Producto" : "Nuevo Producto";
+}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">@ViewData["Title"]</h2>
+
+    <form method="post"
+          asp-action="@(esEdicion ? "Edit" : "Create")"
+          class="card p-4 shadow"
+          style="max-width:600px; margin:auto;">
+
+        @if (esEdicion)
+        {
+            <input type="hidden" asp-for="ProductoID" />
+        }
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Nombre</label>
+            <input asp-for="Nombre" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Descripción</label>
+            <input asp-for="Descripcion" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Precio</label>
+            <input asp-for="Precio"
+                   type="number"
+                   step="0.01"
+                   class="form-control"
+                   required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Stock Actual</label>
+            <input asp-for="StockActual"
+                   type="number"
+                   class="form-control"
+                   required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Stock Mínimo</label>
+            <input asp-for="StockMinimo"
+                   type="number"
+                   class="form-control"
+                   required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold" for="Activo">Activo</label>
+            <select asp-for="Activo" class="form-select">
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit"
+                    class="btn @(esEdicion ? "btn-primary" : "btn-success")">
+                @(esEdicion ? "💾 Guardar Cambios" : "💾 Guardar")
+            </button>
+
+            <a asp-action="Index" class="btn btn-secondary">
+                ⬅ Volver
+            </a>
+        </div>
+    </form>
+</div>
