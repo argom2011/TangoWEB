@@ -105,5 +105,16 @@ Este repositorio no busca ser un sistema cerrado, sino:
 
 ---
 
+# Guía de Implementación de la Base de Datos
 
+## Introducción
+Este documento describe los pasos necesarios para implementar la base de datos, crear las tablas y configurar los procedimientos almacenados para el proyecto.
+
+## Requisitos Previos
+- **Sistema de Gestión de Base de Datos (DBMS)**: SQL Server (versión 2019 express).
+
+## Pasos para la Implementación
+
+-**Ruta del proyecto:SCRIPTS, en orden de la siguiente manera: EsquemadeCreacion.SQL, SPclientes.SQL, SPproductos.SQL, sp_Ventas_ConfirmarPedido.SQL
+-**Contemplar la cadena de conexion: "TangoDB": "Server=ARGOM\\SQLEXPRESS;Database=Tango;Trusted_Connection=True;TrustServerCertificate=True;": cambiar por el de su alias del SERVER.
 
